@@ -414,6 +414,7 @@ public class JpmBitcoinRpcClient {
             return trib;
         } catch (IOException ioe) {
             ioe.printStackTrace();
+            System.out.println("connection lost");
             return null;
         } finally {
             if (connection != null) connection.disconnect();
