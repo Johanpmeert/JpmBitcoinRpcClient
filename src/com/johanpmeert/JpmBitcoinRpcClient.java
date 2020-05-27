@@ -210,6 +210,8 @@ public class JpmBitcoinRpcClient {
 
     /**
      * Return a full block given the blockhash, block is with verbosity 2 so contains full details of all transactions
+     * Attention the return data can get VERY large (several hundred megabytes and into the Gigabyte range) especially with BSV nodes
+     * Please make sure your heap size can swallow this
      * @param blockHash
      * @return Block
      */
@@ -231,7 +233,7 @@ public class JpmBitcoinRpcClient {
             // Reading multiple lines below is necessary for the strange behaviour of only the BSV node, otherwise only a part of the block is read
             // Using BufferedReader should normally do the trick (it does for the other nodes)
             // Also using StringBuilder append because block 479469 in BSV node overloads the heap using strings
-            // There are BSV blocks that return JSON objects > 245Mb !
+            // There are BSV blocks that return JSON objects > 250Mb and even up into the gigabyte range !
             do {
                 extra = brin.readLine();
                 if (extra!=null) builder.append(extra);
@@ -250,6 +252,9 @@ public class JpmBitcoinRpcClient {
         }
     }
 
+    /**
+     * This class contains all the data for a complete block. Some variables may not be used by all node types
+     */
     public class Block {
         public MiddleBlock result;
         public String error;
@@ -320,6 +325,12 @@ public class JpmBitcoinRpcClient {
         public String[] addresses;
     }
 
+    /**
+     * Returns the verbosity 1 details of a block (input is a blockhash, not a blocknumber)
+     * You can use this data to get the transaction details per transaction with GetRawTransaction
+     * @param blockHash
+     * @return
+     */
     public TransactionsInBlock GetTransactionsFromBlock(String blockHash) {
         final String POST_PARAMS = "{\"method\":\"getblock\",\"params\":[\""+blockHash+"\",1]}";
         try {
@@ -383,6 +394,11 @@ public class JpmBitcoinRpcClient {
         public String nextblockhash;
     }
 
+    /**
+     * Gets the full transaction details of a specific txId
+     * @param txId
+     * @return
+     */
     public SingleTransaction GetRawTransaction(String txId) {
         final String POST_PARAMS = "{\"method\":\"getrawtransaction\",\"params\":[\""+txId+"\",2]}";
         try {
