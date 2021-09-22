@@ -207,7 +207,8 @@ public class JpmBitcoinRpcClient {
     /**
      * Return a full block given the blockhash, block is with verbosity 2 so contains full details of all transactions
      * Attention the return data can get VERY large (several hundred megabytes and into the Gigabyte range) especially with BSV nodes
-     * Please make sure your heap size can swallow this
+     * Please make sure your heap size can swallow this, recommended is 6Gb heap size
+     * For BSV nodes, you may need up to 12Gb heap size to be able to import a block
      * @param blockHash
      * @return Block
      */
@@ -224,21 +225,9 @@ public class JpmBitcoinRpcClient {
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK) return null;
             BufferedReader brin = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder builder = new StringBuilder();
-            String extra;
-            // Reading multiple lines below is necessary for the strange behaviour of only the BSV node, otherwise only a part of the block is read
-            // Using BufferedReader should normally do the trick (it does for the other nodes)
-            // Also using StringBuilder append because block 479469 in BSV node overloads the heap using strings
-            // There are BSV blocks that return JSON objects > 250Mb and even up into the gigabyte range !
-            do {
-                extra = brin.readLine();
-                if (extra != null) builder.append(extra);
-            } while (extra != null);
-            brin.close();
-            String jsonResponse = builder.toString().trim();
-            // System.out.println(jsonResponse);
             Gson gson = new GsonBuilder().setLenient().create();  // take care of "malformed JSON" error
-            Block block = gson.fromJson(jsonResponse, Block.class);
+            Block block = gson.fromJson(brin, Block.class);
+            brin.close();
             return block;
         } catch (IOException ioe) {
             ioe.printStackTrace();

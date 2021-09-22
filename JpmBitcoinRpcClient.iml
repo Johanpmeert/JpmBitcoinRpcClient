@@ -41,5 +41,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="junit:junit:4.13.2" level="application" />
+    <orderEntry type="library" name="google.code.gson" level="project" />
   </component>
 </module>
